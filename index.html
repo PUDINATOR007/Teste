@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Enigma</title>
+  <style>
+    body {
+      background-color: #111;
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 100px;
+    }
+
+    button {
+      background-color: red;
+      color: white;
+      font-size: 2em;
+      padding: 20px 40px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 0 0 20px red;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background-color: darkred;
+      box-shadow: 0 0 40px red;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Bem-vindo ao desafio</h1>
+  <button onclick="baixarZip()">⚠️ VÍRUS ⚠️</button>
+
+  <script>
+    function baixarZip() {
+      const a = document.createElement("a");
+      a.href = "criptografiaAES-128-ECB.zip"; // Certifique-se que este arquivo está no mesmo local do HTML
+      a.download = "criptografiaAES-128-ECB.zip";
+      a.click();
+    }
+  </script>
+
+</body>
+</html>
