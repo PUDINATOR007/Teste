@@ -4,41 +4,63 @@
   <meta charset="UTF-8" />
   <title>Enigma</title>
   <style>
-    body {
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
       background-color: #111;
-      color: white;
       font-family: Arial, sans-serif;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+
+    h1 {
+      font-size: 4em;
+      margin-bottom: 60px;
       text-align: center;
-      margin-top: 100px;
     }
 
     button {
       background-color: red;
       color: white;
-      font-size: 2em;
-      padding: 20px 40px;
+      font-size: 4em;
+      padding: 40px 80px;
       border: none;
-      border-radius: 10px;
+      border-radius: 30px;
       cursor: pointer;
-      box-shadow: 0 0 20px red;
-      transition: 0.3s;
+      box-shadow: 0 0 40px red;
+      transition: 0.2s ease;
     }
 
     button:hover {
       background-color: darkred;
-      box-shadow: 0 0 40px red;
+      box-shadow: 0 0 80px red;
+    }
+
+    button:active {
+      transform: scale(1.1);
+      box-shadow: 0 0 100px white;
     }
   </style>
 </head>
 <body>
 
   <h1>Bem-vindo ao desafio</h1>
-  <button onclick="baixarZip()">⚠️ VÍRUS ⚠️</button>
+  <button onclick="executarAcao()">⚠️ VÍRUS ⚠️</button>
+
+  <audio id="alertSound" src="alert.mp3" preload="auto"></audio>
 
   <script>
-    function baixarZip() {
+    function executarAcao() {
+      const som = document.getElementById("alertSound");
+      som.currentTime = 0;
+      som.play();
+
       const a = document.createElement("a");
-      a.href = "criptografiaAES-128-ECB.zip"; // Certifique-se que este arquivo está no mesmo local do HTML
+      a.href = "criptografiaAES-128-ECB.zip";
       a.download = "criptografiaAES-128-ECB.zip";
       a.click();
     }
