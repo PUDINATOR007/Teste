@@ -129,7 +129,7 @@
     const ctx = canvas.getContext("2d");
 
     const gameOverText = document.getElementById("gameOver");
-    const scoreDisplay = document.getElementById("scoreDisplay");
+    const scoreDisplay = document.getElementById("finalScore");
     const startScreen = document.getElementById("startScreen");
     const tutorial = document.getElementById("tutorial");
 
@@ -316,6 +316,10 @@ gameOverText.style.display = "block";
   startScreen.style.display = "flex";
   canvas.style.display = "none";
 }
+
+window.onerror = function (message, source, lineno, colno, error) {
+  alert("Erro: " + message + "\nLinha: " + lineno);
+};
   </script>
 </body>
 </html>
