@@ -2,69 +2,320 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <title>apk.exe</title>
+  <title>Runner 2D - Obstáculos Aéreos e Bônus</title>
   <style>
-    html, body {
-      height: 100%;
+    * {
       margin: 0;
       padding: 0;
-      background-color: #111;
-      font-family: Arial, sans-serif;
-      color: white;
+      box-sizing: border-box;
+      font-family: sans-serif;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: #222;
       display: flex;
-      justify-content: center;
       align-items: center;
-      flex-direction: column;
+      justify-content: center;
+      position: relative;
     }
-
-    h1 {
-      font-size: 4em;
-      margin-bottom: 60px;
-      text-align: center;
+    canvas {
+      background: #eee;
+      border: 2px solid #444;
+      display: none;
     }
-
-    button {
-      background-color: red;
+    #gameOver {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #333;
+  padding: 40px;
+  border-radius: 20px;
+  box-shadow: 0 0 20px black;
+  color: white;
+  text-align: center;
+  display: none;
+  z-index: 3;
+}
+#gameOver h1 {
+  font-size: 3em;
+  margin-bottom: 20px;
+}
+#gameOver p {
+  font-size: 1.5em;
+  margin-bottom: 30px;
+}
+#gameOver button {
+  margin: 10px;
+}
+    #startScreen, #tutorial {
+      position: absolute;
+      background: #333;
       color: white;
-      font-size: 4em;
-      padding: 40px 80px;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 0 20px black;
+      text-align: center;
+      width: 80%;
+      max-width: 500px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      z-index: 2;
+      font-size: 1.4em; /* AUMENTA O TAMANHO DA FONTE */
+    }
+    #tutorial {
+      display: none;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 1.2em;
       border: none;
-      border-radius: 30px;
+      border-radius: 10px;
       cursor: pointer;
-      box-shadow: 0 0 40px red;
-      transition: 0.2s ease;
+      background-color: #555;
+      color: white;
+      transition: background 0.2s;
     }
-
     button:hover {
-      background-color: darkred;
-      box-shadow: 0 0 80px red;
+      background-color: #777;
     }
-
-    button:active {
-      transform: scale(1.1);
-      box-shadow: 0 0 100px white;
+    .item {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 15px;
+      font-size: 1.3em; /* AUMENTA O TAMANHO DOS ITENS */
     }
+    .box {
+      width: 30px;
+      height: 30px;
+    }
+    .red { background: red; }
+    .darkred { background: darkred; border-radius: 50%; }
+    .gold { background: gold; }
+    .blue { background: blue; }
   </style>
 </head>
 <body>
+  <div id="startScreen">
+    <h1>Runner 2D</h1>
+    <button onclick="startGame()">Começar</button>
+    <button onclick="showTutorial()">Tutorial</button>
+  </div>
 
-  <h1>será que vale a pena o risco?</h1>
-  <button onclick="executarAcao()">⚠️ VÍRUS ⚠️</button>
+  <div id="tutorial">
+    <h2>Como jogar</h2>
+    <p>Não deixe os vermelhos te tocarem</p>
+    <p>Aperte na tela ou pressione <strong>Espaço</strong> para pular</p>
+    <div class="item"><div class="box red"></div> = Inimigo (chão)</div>
+    <div class="item"><div class="box darkred"></div> = Inimigo (aéreo)</div>
+    <div class="item"><div class="box gold"></div> = +500 pontos</div>
+    <div class="item"><div class="box blue"></div> = Você</div>
+    <button onclick="hideTutorial()">Voltar</button>
+  </div>
 
-  <audio id="alertSound" src="alert.mp3" preload="auto"></audio>
+  <canvas id="game" width="800" height="400"></canvas>
+  <div id="gameOver">
+  <h1>Game Over</h1>
+  <p id="finalScore">Pontuação: 0</p>
+  <button onclick="resetGame()">Recomeçar</button>
+  <button onclick="goToStart()">Voltar ao início</button>
+</div>
 
   <script>
-    function executarAcao() {
-      const som = document.getElementById("alertSound");
-      som.currentTime = 0;
-      som.play();
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
 
-      const a = document.createElement("a");
-      a.href = "apk.zip";
-      a.download = "apk.zip";
-      a.click();
+    const gameOverText = document.getElementById("gameOver");
+    const scoreDisplay = document.getElementById("scoreDisplay");
+    const startScreen = document.getElementById("startScreen");
+    const tutorial = document.getElementById("tutorial");
+
+    let player = { x: 50, y: 350, w: 40, h: 40, vy: 0, jump: -12, gravity: 0.6, onGround: true };
+    let obstacles = [];
+    let bonuses = [];
+    let airObstacles = [];
+    let score = 0;
+    let speed = 6;
+    let isGameOver = false;
+
+    function spawnObstacle() {
+      const delay = Math.random() * 1000 + 1000;
+      setTimeout(() => {
+        if (!isGameOver) {
+          const random = Math.random();
+          if (random < 0.5) {
+            obstacles.push({ x: 800, y: 360, w: 30, h: 40 });
+          } else {
+            airObstacles.push({ x: 800, y: 270, r: 20 });
+          }
+          spawnObstacle();
+        }
+      }, delay);
     }
-  </script>
 
+    function spawnBonus() {
+      const delay = Math.random() * 8000 + 5000;
+      setTimeout(() => {
+        if (!isGameOver) {
+          bonuses.push({ x: 800, y: 360, w: 30, h: 30 });
+          spawnBonus();
+        }
+      }, delay);
+    }
+
+    function resetGame() {
+      player.y = 350;
+      player.vy = 0;
+      player.onGround = true;
+      obstacles = [];
+      bonuses = [];
+      airObstacles = [];
+      score = 0;
+      speed = 6;
+      isGameOver = false;
+      gameOverText.style.display = "none";
+      spawnObstacle();
+      spawnBonus();
+      loop();
+    }
+
+    function loop() {
+      if (isGameOver) return;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      score += 1;
+      if (score % 100 === 0) speed += 0.5;
+
+      player.vy += player.gravity;
+      player.y += player.vy;
+      if (player.y >= 350) {
+        player.y = 350;
+        player.vy = 0;
+        player.onGround = true;
+      }
+
+      for (let i = obstacles.length - 1; i >= 0; i--) {
+        obstacles[i].x -= speed;
+        if (obstacles[i].x + obstacles[i].w < 0) {
+          obstacles.splice(i, 1);
+          continue;
+        }
+
+        if (
+          player.x < obstacles[i].x + obstacles[i].w &&
+          player.x + player.w > obstacles[i].x &&
+          player.y < obstacles[i].y + obstacles[i].h &&
+          player.y + player.h > obstacles[i].y
+        ) {
+          isGameOver = true;
+          gameOverText.style.display = "block";
+          gameOverText.style.display = "block";
+document.getElementById("finalScore").textContent = "Pontuação: " + score;
+          return;
+        }
+
+        ctx.fillStyle = "red";
+        ctx.fillRect(obstacles[i].x, obstacles[i].y, obstacles[i].w, obstacles[i].h);
+      }
+
+      for (let i = airObstacles.length - 1; i >= 0; i--) {
+        airObstacles[i].x -= speed;
+        if (airObstacles[i].x + airObstacles[i].r < 0) {
+          airObstacles.splice(i, 1);
+          continue;
+        }
+
+        const dx = (player.x + player.w / 2) - (airObstacles[i].x + airObstacles[i].r);
+        const dy = (player.y + player.h / 2) - (airObstacles[i].y + airObstacles[i].r);
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        if (distance < airObstacles[i].r + player.w / 2) {
+          isGameOver = true;
+          scoreDisplay.textContent = "Pontuação: " + score;
+gameOverText.style.display = "block";
+          setTimeout(resetGame, 2000);
+          return;
+        }
+
+        ctx.fillStyle = "darkred";
+        ctx.beginPath();
+        ctx.arc(airObstacles[i].x + airObstacles[i].r, airObstacles[i].y + airObstacles[i].r, airObstacles[i].r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      for (let i = bonuses.length - 1; i >= 0; i--) {
+        bonuses[i].x -= speed;
+        if (bonuses[i].x + bonuses[i].w < 0) {
+          bonuses.splice(i, 1);
+          continue;
+        }
+
+        if (
+          player.x < bonuses[i].x + bonuses[i].w &&
+          player.x + player.w > bonuses[i].x &&
+          player.y < bonuses[i].y + bonuses[i].h &&
+          player.y + player.h > bonuses[i].y
+        ) {
+          score += 500;
+          bonuses.splice(i, 1);
+          continue;
+        }
+
+        ctx.fillStyle = "gold";
+        ctx.fillRect(bonuses[i].x, bonuses[i].y, bonuses[i].w, bonuses[i].h);
+      }
+
+      ctx.fillStyle = "blue";
+      ctx.fillRect(player.x, player.y, player.w, player.h);
+
+      ctx.fillStyle = "#555";
+      ctx.fillRect(0, 390, canvas.width, 10);
+
+      ctx.fillStyle = "black";
+      ctx.font = "20px sans-serif";
+      ctx.fillText("Pontos: " + score, 10, 30);
+
+      requestAnimationFrame(loop);
+    }
+
+    function jump() {
+      if (player.onGround && !isGameOver) {
+        player.vy = player.jump;
+        player.onGround = false;
+      }
+    }
+
+    document.addEventListener("keydown", (e) => {
+      if (e.code === "Space") jump();
+    });
+
+    document.addEventListener("touchstart", () => {
+      jump();
+    });
+
+    function startGame() {
+      startScreen.style.display = "none";
+      canvas.style.display = "block";
+      resetGame();
+    }
+
+    function showTutorial() {
+      startScreen.style.display = "none";
+      tutorial.style.display = "flex";
+    }
+
+    function hideTutorial() {
+      tutorial.style.display = "none";
+      startScreen.style.display = "flex";
+    }
+    
+    function goToStart() {
+  gameOverText.style.display = "none";
+  startScreen.style.display = "flex";
+  canvas.style.display = "none";
+}
+  </script>
 </body>
 </html>
